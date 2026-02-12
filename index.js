@@ -6,7 +6,7 @@ const fs = require("fs");
 
 // --- 🌐 سيرفر Uptime لضمان نشاط البوت على Railway ---
 http.createServer((req, res) => {
-    res.write("ELGRANDFT FINAL SYSTEM 🚀");
+    res.write("ELGRANDFT SYSTEM: SECURE & FAST 🚀");
     res.end();
 }).listen(process.env.PORT || 3000);
 
@@ -26,7 +26,7 @@ async function getAIResponse(text, imageData = null) {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت نظام ذكاء اصطناعي عقلاني ومنطقي جداً. مطورك هو ${DEVELOPER_INFO}. أجب بدقة واحترافية. حلل الصور والمعادلات بذكاء.`
+                content: `أنت نظام ذكاء اصطناعي عقلاني ومنطقي جداً. مطورك هو ${DEVELOPER_INFO}. أجب بدقة واحترافية. إذا سألك أحد عن المطور امدحه واذكر رقمه +212781886270.`
             }, { 
                 role: "user", 
                 content: imageData ? [
@@ -44,11 +44,11 @@ async function getAIResponse(text, imageData = null) {
 }
 
 async function startAI() {
-    // 🔥 الخطوة الحاسمة: حذف مجلد الجلسة بالكامل عند كل تشغيل فاشل لضمان كود جديد
+    // 🔥 حذف بقايا الجلسة الفاشلة برمجياً لضمان كود جديد للرقم 212633678896
     if (!fs.existsSync('./auth_info/creds.json')) {
         if (fs.existsSync('./auth_info')) {
             fs.rmSync('./auth_info', { recursive: true, force: true });
-            console.log('🗑️ تم تنظيف الجلسة القديمة لضمان ظهور كود ربط شغال 100%.');
+            console.log('🗑️ تم تنظيف بقايا الجلسة لضمان كود ربط شغال 100%.');
         }
     }
 
@@ -62,20 +62,18 @@ async function startAI() {
         },
         logger: logger,
         printQRInTerminal: false,
-        // 🦊 استخدام هوية متصفح Firefox لضمان تجاوز قيود واتساب
-        browser: ["Firefox", "MacOS", "120.0"] 
+        // انتحال هوية متصفح مستقر جداً لتجاوز رفض الكود
+        browser: ["Chrome", "Windows", "121.0.6167.184"] 
     });
 
-    // 🔑 طلب كود الربط
+    // 🔑 طلب كود الربط للرقم المستهدف
     if (!sock.authState.creds.registered) {
         console.log(`⏳ جاري طلب كود الربط للرقم: ${TARGET_NUMBER}...`);
-        await delay(10000); 
+        await delay(12000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
-            console.log(`\n\n🔗=======================================🔗`);
-            console.log(`✅ كود الربط الخاص بك هو: ${code}`);
-            console.log(`🔗=======================================🔗\n\n`);
-        } catch (err) { console.log("❌ فشل طلب الكود. تأكد من أن الرقم صحيح واتصال الإنترنت مستقر."); }
+            console.log(`\n✅ كود الربط الخاص بك يا زعيم هو: ${code}\n`);
+        } catch (err) { console.log("❌ فشل طلب الكود. تأكد من حذف Volume من واجهة Railway."); }
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -88,20 +86,20 @@ async function startAI() {
 
         // 🛡️ واجهة الآدمين
         if (text === ADMIN_PASSWORD) {
-            return await sock.sendMessage(from, { text: `🛡️ أهلاً زعيم ELGRANDFT.\nالنظام يعمل بأقصى سرعة.\nالمفعلون: ${activatedUsers.size}\nالمطور: +212781886270` });
+            return await sock.sendMessage(from, { text: `🛡️ أهلاً زعيم ELGRANDFT.\nالنظام يعمل بأقصى سرعة وعقلانية.\nرقم التواصل: +212781886270` });
         }
 
-        // 🔑 نظام التفعيل (يطلبه البوت لأول مرة)
+        // 🔑 نظام التفعيل للمستخدمين الجدد
         if (!activatedUsers.has(from)) {
             if (text === ACTIVATION_CODE) {
                 activatedUsers.add(from);
-                return await sock.sendMessage(from, { text: "✅ تم تفعيلك بنجاح! كيف يمكنني مساعدتك اليوم؟" });
+                return await sock.sendMessage(from, { text: "✅ تم تفعيلك بنجاح! أنا الآن رهن إشارتك." });
             } else {
                 return await sock.sendMessage(from, { text: "⚠️ أهلاً بك! لاستخدام نظام ELGRANDFT، يرجى إرسال كود التفعيل: `FT2026`" });
             }
         }
 
-        // معالجة الصور والذكاء الاصطناعي
+        // معالجة الصور والذكاء الاصطناعي للمفعلين
         let imageData = null;
         if (msg.message.imageMessage) {
             const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
@@ -119,7 +117,7 @@ async function startAI() {
 
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update;
-        if (connection === 'open') console.log("🚀 النظام متصل وشغال بنجاح!");
+        if (connection === 'open') console.log("🚀 البوت شغال الآن بنجاح!");
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startAI();
