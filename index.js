@@ -11,7 +11,7 @@ http.createServer((req, res) => {
 
 // --- ⚙️ إعدادات المطور ELGRANDFT ---
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
-const TARGET_NUMBER = "212633678896"; // الرقم المرتبط
+const TARGET_NUMBER = "212633678896"; 
 const DEVELOPER_INFO = "المبرمج العبقري ELGRANDFT (+212781886270)";
 
 // --- 🧠 محرك الذكاء الاصطناعي ---
@@ -51,8 +51,12 @@ async function startAI() {
     // كود الربط إذا لم تكن مسجلاً
     if (!sock.authState.creds.registered) {
         await delay(5000);
-        const code = await sock.requestPairingCode(TARGET_NUMBER);
-        console.log(`✅ كود الربط الخاص بك: ${code}`);
+        try {
+            const code = await sock.requestPairingCode(TARGET_NUMBER);
+            console.log(`✅ كود الربط الخاص بك: ${code}`);
+        } catch (err) {
+            console.log("خطأ في طلب الكود");
+        }
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -65,7 +69,6 @@ async function startAI() {
         let text = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
         let imageData = null;
 
-        // معالجة الصور
         if (msg.message.imageMessage) {
             const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
             let buffer = Buffer.from([]);
@@ -80,4 +83,10 @@ async function startAI() {
         }
     });
 
-    sock.
+    sock.ev.on('connection.update', (update) => {
+        if (update.connection === 'open') console.log("🚀 البوت متصل وجاهز للعمل!");
+        if (update.connection === 'close') startAI();
+    });
+}
+
+startAI();
