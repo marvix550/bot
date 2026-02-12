@@ -5,7 +5,7 @@ const http = require("http");
 
 // --- 🌐 سيرفر Uptime لـ Railway ---
 http.createServer((req, res) => {
-    res.write("ELGRANDFT ADMIN SYSTEM IS ACTIVE 🚀");
+    res.write("ELGRANDFT SYSTEM IS PUBLIC AND ACTIVE 🚀");
     res.end();
 }).listen(process.env.PORT || 3000);
 
@@ -21,7 +21,7 @@ async function getAIResponse(text, imageData = null) {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت نظام ذكاء اصطناعي خارق. مطورك هو ${DEVELOPER_INFO}. أجب بذكاء، وحلل الصور والمعادلات بدقة. أجب بأسلوب محترم وقوي.`
+                content: `أنت ذكاء اصطناعي خارق. مطورك هو ${DEVELOPER_INFO}. أجب على جميع المستخدمين بذكاء وسرعة.`
             }],
             temperature: 0.6
         };
@@ -34,7 +34,7 @@ async function getAIResponse(text, imageData = null) {
             headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } 
         });
         return res.data.choices[0].message.content;
-    } catch (e) { return "⚠️ السيرفر مشغول حالياً يا زعيم."; }
+    } catch (e) { return "⚠️ السيرفر مشغول حالياً."; }
 }
 
 async function startAI() {
@@ -45,7 +45,7 @@ async function startAI() {
         auth: state,
         logger: logger,
         printQRInTerminal: false,
-        browser: ["Ubuntu", "Chrome", "20.0.04"]
+        browser: ["ELGRANDFT BOT", "Chrome", "1.0.0"]
     });
 
     if (!sock.authState.creds.registered) {
@@ -60,29 +60,23 @@ async function startAI() {
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
-        if (!msg.message || msg.key.fromMe) return;
-        const from = msg.key.remoteJid;
-        const isGroup = from.endsWith('@g.us');
+        // تم إزالة شرط (msg.key.fromMe) لكي يرد على الجميع + إزالة أي قيود على الأرقام
+        if (!msg.message) return;
         
+        const from = msg.key.remoteJid;
         let text = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
         let imageData = null;
 
-        // 🛡️ واجهة الآدمين الاحترافية
+        // 🛡️ واجهة الآدمين (تشتغل فقط إذا كتبت الباسورد)
         if (text === ADMIN_PASSWORD) {
-            const adminMenu = `*👋 أهلاً بك يا زعيم ELGRANDFT*
-            
-*🛡️ قائمة التحكم الآدمين:*
-1. *حالة السيرفر:* متصل ✅
-2. *المطور:* عبد الصمد
-3. *الرقم:* ${DEVELOPER_INFO}
-4. *الذكاء الاصطناعي:* نشط لجميع المستخدمين
-
-_أنا الآن رهن إشارتك، سأقوم بالرد على الجميع تلقائياً._`;
-            await sock.sendMessage(from, { text: adminMenu }, { quoted: msg });
+            await sock.sendMessage(from, { text: `🛡️ أهلاً يا زعيم ELGRANDFT\nالنظام الآن متاح للجميع (Public Mode ✅).` });
             return;
         }
 
-        // معالجة الصور
+        // إذا كانت الرسالة مرسلة من البوت نفسه لا يرد (لتجنب التكرار اللانهائي)
+        if (msg.key.fromMe) return;
+
+        // معالجة الصور لجميع المستخدمين
         if (msg.message.imageMessage) {
             const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
             let buffer = Buffer.from([]);
@@ -91,7 +85,7 @@ _أنا الآن رهن إشارتك، سأقوم بالرد على الجميع
             text = msg.message.imageMessage.caption || "";
         }
 
-        // الرد التلقائي على الجميع (خاص ومجموعات)
+        // الرد على أي نص يأتي من أي شخص
         if (text || imageData) {
             const reply = await getAIResponse(text, imageData);
             await sock.sendMessage(from, { text: reply }, { quoted: msg });
@@ -99,7 +93,7 @@ _أنا الآن رهن إشارتك، سأقوم بالرد على الجميع
     });
 
     sock.ev.on('connection.update', (update) => {
-        if (update.connection === 'open') console.log("🚀 بوت ELGRANDFT شغال للجميع!");
+        if (update.connection === 'open') console.log("🌍 البوت الآن متاح للعامة (Public)!");
         if (update.connection === 'close') startAI();
     });
 }
