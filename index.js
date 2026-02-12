@@ -4,113 +4,95 @@ const axios = require("axios");
 const http = require("http");
 const fs = require("fs");
 
-// --- 🌐 سيرفر Uptime لضمان نشاط البوت على Railway ---
-http.createServer((req, res) => {
-    res.write("ELGRANDFT SYSTEM: READY TO CONNECT 🚀");
-    res.end();
-}).listen(process.env.PORT || 3000);
+// سيرفر Uptime لضمان نشاط البوت على Railway
+http.createServer((req, res) => { res.end("ELGRANDFT UBUNTU SYSTEM 🚀"); }).listen(process.env.PORT || 3000);
 
-// --- ⚙️ إعدادات المطور ELGRANDFT ---
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
-const TARGET_NUMBER = "212633678896"; // الرقم المستهدف للربط
-const ADMIN_PASSWORD = "abdessamad2014"; // كلمة سر واجهة الآدمين
-const ACTIVATION_CODE = "FT2026"; // كود التفعيل للمستخدمين الجدد
+const TARGET_NUMBER = "212633678896"; 
+const ADMIN_PASSWORD = "abdessamad2014";
+const ACTIVATION_CODE = "FT2026"; 
 const DEVELOPER_INFO = "المبرمج العبقري ELGRANDFT (+212781886270)";
 
 let activatedUsers = new Set();
 
-// --- 🧠 محرك الذكاء الاصطناعي العقلاني ---
 async function getAIResponse(text, imageData = null) {
     try {
         const payload = {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت نظام ذكاء اصطناعي فائق الذكاء، عقلاني ومنطقي. مطورك هو ${DEVELOPER_INFO}. 
-                أنت تجيب على أي سؤال، بما في ذلك المعادلات الرياضية المعقدة وتحليل الصور بدقة عالية. 
-                إذا سألك أحد عن المطور، اذكر اسمه ورقمه بفخر.`
+                content: `أنت ذكاء اصطناعي عقلاني وشامل مطور من قبل ${DEVELOPER_INFO}. تجيب على الجميع بدقة وتفهم الصور والمعادلات.` 
             }, { 
                 role: "user", 
-                content: imageData ? [
-                    { type: "text", text: text || "حلل هذه الصورة بعقلانية ومنطق" },
-                    { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }
-                ] : text 
+                content: imageData ? [{ type: "text", text: text || "حلل الصورة" }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }] : text 
             }],
-            temperature: 0.4 // خفض الحرارة لزيادة الدقة والعقلانية في الإجابة
+            temperature: 0.5
         };
         const res = await axios.post("https://api.groq.com/openai/v1/chat/completions", payload, { 
             headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } 
         });
         return res.data.choices[0].message.content;
-    } catch (e) { return "⚠️ عذراً يا زعيم، السيرفر يواجه ضغطاً حالياً."; }
+    } catch (e) { return "⚠️ السيرفر مشغول حالياً."; }
 }
 
 async function startAI() {
-    // 🔥 تدمير الجلسة القديمة برمجياً لضمان كود ربط جديد تماماً
-    if (!fs.existsSync('./auth_info/creds.json')) {
-        if (fs.existsSync('./auth_info')) {
-            fs.rmSync('./auth_info', { recursive: true, force: true });
-            console.log('🗑️ تم تنظيف مجلد auth_info لضمان استلام كود جديد.');
-        }
+    // تنظيف الجلسة الفاشلة فقط لضمان ظهور الكود
+    if (!fs.existsSync('./auth_info/creds.json') && fs.existsSync('./auth_info')) {
+        fs.rmSync('./auth_info', { recursive: true, force: true });
     }
 
     const { state, saveCreds } = await useMultiFileAuthState('auth_info');
-    const logger = pino({ level: 'silent' });
 
     const sock = makeWASocket({
         auth: {
             creds: state.creds,
-            keys: makeCacheableSignalKeyStore(state.keys, logger),
+            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
         },
-        logger: logger,
         printQRInTerminal: false,
-        // 🦊 استخدام متصفح Firefox لضمان أعلى نسبة نجاح في الربط
-        browser: ["Firefox", "MacOS", "121.0"] 
+        logger: pino({ level: 'silent' }),
+        // 🐧 العودة لهوية Ubuntu المستقرة التي فضلتها
+        browser: ["Ubuntu", "Chrome", "110.0.5481.178"] 
     });
 
-    // 🔑 طلب كود الربط للرقم +212633678896
     if (!sock.authState.creds.registered) {
-        console.log(`⏳ جاري طلب كود الربط للزعيم ELGRANDFT على الرقم: ${TARGET_NUMBER}...`);
-        await delay(12000); 
+        console.log(`⏳ جاري طلب كود Ubuntu للرقم: ${TARGET_NUMBER}...`);
+        await delay(10000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
-            console.log(`\n🔗=======================================🔗`);
-            console.log(`✅ كود الربط الخاص بك هو: ${code}`);
-            console.log(`🔗=======================================🔗\n`);
-        } catch (err) { console.log("❌ فشل طلب الكود. يرجى التأكد من أن الرقم صحيح تماماً."); }
+            console.log(`\n✅ كود الربط الخاص بك هو: ${code}\n`);
+        } catch (err) { console.log("❌ فشل طلب الكود."); }
     }
 
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
-        if (!msg.message || msg.key.fromMe) return;
+        if (!msg.message || msg.key.fromMe) return; // عدم الرد على النفس
         const from = msg.key.remoteJid;
         const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
 
-        // 🛡️ واجهة الآدمين (التحكم الكامل)
+        // واجهة الآدمين
         if (text === ADMIN_PASSWORD) {
-            return await sock.sendMessage(from, { text: `🛡️ أهلاً بالمطور العبقري ELGRANDFT.\nالنظام متصل ويعمل بأقصى طاقة.\nعدد المستخدمين المفعلين: ${activatedUsers.size}\nرقم تواصلك: +212781886270` });
+            return await sock.sendMessage(from, { text: `🛡️ أهلاً بالمطور ELGRANDFT. النظام Ubuntu شغال للجميع ✅` });
         }
 
-        // 🔑 نظام التفعيل للمستخدمين (كود FT2026)
+        // نظام التفعيل (يضمن الرد على الجميع بعد إدخال الكود)
         if (!activatedUsers.has(from)) {
             if (text === ACTIVATION_CODE) {
                 activatedUsers.add(from);
-                return await sock.sendMessage(from, { text: "✅ تم تفعيل حسابك في نظام ELGRANDFT المتطور. أنا جاهز لمساعدتك!" });
+                return await sock.sendMessage(from, { text: "✅ تم تفعيلك! سأقوم بالرد على جميع رسائلك الآن." });
             } else {
-                return await sock.sendMessage(from, { text: "⚠️ عذراً، يجب إرسال كود التفعيل `FT2026` لاستخدام البوت." });
+                return await sock.sendMessage(from, { text: "⚠️ أرسل كود التفعيل `FT2026` لكي أتمكن من الرد عليك." });
             }
         }
 
-        // معالجة الصور، المعادلات، والذكاء الاصطناعي
+        // معالجة الصور والذكاء الاصطناعي للجميع
         let imageData = null;
         if (msg.message.imageMessage) {
             const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
             let buffer = Buffer.from([]);
             for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
             imageData = buffer.toString('base64');
-            text = msg.message.imageMessage.caption || "";
         }
 
         if (text || imageData) {
@@ -120,12 +102,8 @@ async function startAI() {
     });
 
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
-        if (connection === 'open') console.log("🚀 تم الاتصال بنجاح يا ELGRANDFT! البوت جاهز.");
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            if (shouldReconnect) startAI();
-        }
+        if (update.connection === 'open') console.log("🚀 تم الاتصال بنظام Ubuntu بنجاح!");
+        if (update.connection === 'close') startAI();
     });
 }
 
