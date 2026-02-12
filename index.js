@@ -6,15 +6,15 @@ const fs = require("fs");
 
 // --- 🌐 سيرفر Uptime لضمان نشاط البوت على Railway ---
 http.createServer((req, res) => {
-    res.write("ELGRANDFT SYSTEM: SECURE & FAST 🚀");
+    res.write("ELGRANDFT SYSTEM: READY TO CONNECT 🚀");
     res.end();
 }).listen(process.env.PORT || 3000);
 
 // --- ⚙️ إعدادات المطور ELGRANDFT ---
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
-const TARGET_NUMBER = "212633678896"; 
-const ADMIN_PASSWORD = "abdessamad2014";
-const ACTIVATION_CODE = "FT2026"; 
+const TARGET_NUMBER = "212633678896"; // الرقم المستهدف للربط
+const ADMIN_PASSWORD = "abdessamad2014"; // كلمة سر واجهة الآدمين
+const ACTIVATION_CODE = "FT2026"; // كود التفعيل للمستخدمين الجدد
 const DEVELOPER_INFO = "المبرمج العبقري ELGRANDFT (+212781886270)";
 
 let activatedUsers = new Set();
@@ -26,29 +26,31 @@ async function getAIResponse(text, imageData = null) {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت نظام ذكاء اصطناعي عقلاني ومنطقي جداً. مطورك هو ${DEVELOPER_INFO}. أجب بدقة واحترافية. إذا سألك أحد عن المطور امدحه واذكر رقمه +212781886270.`
+                content: `أنت نظام ذكاء اصطناعي فائق الذكاء، عقلاني ومنطقي. مطورك هو ${DEVELOPER_INFO}. 
+                أنت تجيب على أي سؤال، بما في ذلك المعادلات الرياضية المعقدة وتحليل الصور بدقة عالية. 
+                إذا سألك أحد عن المطور، اذكر اسمه ورقمه بفخر.`
             }, { 
                 role: "user", 
                 content: imageData ? [
-                    { type: "text", text: text || "حلل هذه الصورة بعقلانية" },
+                    { type: "text", text: text || "حلل هذه الصورة بعقلانية ومنطق" },
                     { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }
                 ] : text 
             }],
-            temperature: 0.5
+            temperature: 0.4 // خفض الحرارة لزيادة الدقة والعقلانية في الإجابة
         };
         const res = await axios.post("https://api.groq.com/openai/v1/chat/completions", payload, { 
             headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } 
         });
         return res.data.choices[0].message.content;
-    } catch (e) { return "⚠️ السيرفر مشغول حالياً، حاول مرة أخرى."; }
+    } catch (e) { return "⚠️ عذراً يا زعيم، السيرفر يواجه ضغطاً حالياً."; }
 }
 
 async function startAI() {
-    // 🔥 حذف بقايا الجلسة الفاشلة برمجياً لضمان كود جديد للرقم 212633678896
+    // 🔥 تدمير الجلسة القديمة برمجياً لضمان كود ربط جديد تماماً
     if (!fs.existsSync('./auth_info/creds.json')) {
         if (fs.existsSync('./auth_info')) {
             fs.rmSync('./auth_info', { recursive: true, force: true });
-            console.log('🗑️ تم تنظيف بقايا الجلسة لضمان كود ربط شغال 100%.');
+            console.log('🗑️ تم تنظيف مجلد auth_info لضمان استلام كود جديد.');
         }
     }
 
@@ -62,18 +64,20 @@ async function startAI() {
         },
         logger: logger,
         printQRInTerminal: false,
-        // انتحال هوية متصفح مستقر جداً لتجاوز رفض الكود
-        browser: ["Chrome", "Windows", "121.0.6167.184"] 
+        // 🦊 استخدام متصفح Firefox لضمان أعلى نسبة نجاح في الربط
+        browser: ["Firefox", "MacOS", "121.0"] 
     });
 
-    // 🔑 طلب كود الربط للرقم المستهدف
+    // 🔑 طلب كود الربط للرقم +212633678896
     if (!sock.authState.creds.registered) {
-        console.log(`⏳ جاري طلب كود الربط للرقم: ${TARGET_NUMBER}...`);
+        console.log(`⏳ جاري طلب كود الربط للزعيم ELGRANDFT على الرقم: ${TARGET_NUMBER}...`);
         await delay(12000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
-            console.log(`\n✅ كود الربط الخاص بك يا زعيم هو: ${code}\n`);
-        } catch (err) { console.log("❌ فشل طلب الكود. تأكد من حذف Volume من واجهة Railway."); }
+            console.log(`\n🔗=======================================🔗`);
+            console.log(`✅ كود الربط الخاص بك هو: ${code}`);
+            console.log(`🔗=======================================🔗\n`);
+        } catch (err) { console.log("❌ فشل طلب الكود. يرجى التأكد من أن الرقم صحيح تماماً."); }
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -84,22 +88,22 @@ async function startAI() {
         const from = msg.key.remoteJid;
         const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
 
-        // 🛡️ واجهة الآدمين
+        // 🛡️ واجهة الآدمين (التحكم الكامل)
         if (text === ADMIN_PASSWORD) {
-            return await sock.sendMessage(from, { text: `🛡️ أهلاً زعيم ELGRANDFT.\nالنظام يعمل بأقصى سرعة وعقلانية.\nرقم التواصل: +212781886270` });
+            return await sock.sendMessage(from, { text: `🛡️ أهلاً بالمطور العبقري ELGRANDFT.\nالنظام متصل ويعمل بأقصى طاقة.\nعدد المستخدمين المفعلين: ${activatedUsers.size}\nرقم تواصلك: +212781886270` });
         }
 
-        // 🔑 نظام التفعيل للمستخدمين الجدد
+        // 🔑 نظام التفعيل للمستخدمين (كود FT2026)
         if (!activatedUsers.has(from)) {
             if (text === ACTIVATION_CODE) {
                 activatedUsers.add(from);
-                return await sock.sendMessage(from, { text: "✅ تم تفعيلك بنجاح! أنا الآن رهن إشارتك." });
+                return await sock.sendMessage(from, { text: "✅ تم تفعيل حسابك في نظام ELGRANDFT المتطور. أنا جاهز لمساعدتك!" });
             } else {
-                return await sock.sendMessage(from, { text: "⚠️ أهلاً بك! لاستخدام نظام ELGRANDFT، يرجى إرسال كود التفعيل: `FT2026`" });
+                return await sock.sendMessage(from, { text: "⚠️ عذراً، يجب إرسال كود التفعيل `FT2026` لاستخدام البوت." });
             }
         }
 
-        // معالجة الصور والذكاء الاصطناعي للمفعلين
+        // معالجة الصور، المعادلات، والذكاء الاصطناعي
         let imageData = null;
         if (msg.message.imageMessage) {
             const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
@@ -117,7 +121,7 @@ async function startAI() {
 
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update;
-        if (connection === 'open') console.log("🚀 البوت شغال الآن بنجاح!");
+        if (connection === 'open') console.log("🚀 تم الاتصال بنجاح يا ELGRANDFT! البوت جاهز.");
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startAI();
