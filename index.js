@@ -6,7 +6,7 @@ const fs = require("fs");
 
 // --- 🌐 سيرفر Uptime لضمان نشاط البوت على Railway ---
 http.createServer((req, res) => {
-    res.write("ELGRANDFT SYSTEM IS ONLINE 🚀");
+    res.write("ELGRANDFT SYSTEM: SECURE & FAST 🚀");
     res.end();
 }).listen(process.env.PORT || 3000);
 
@@ -17,18 +17,16 @@ const ADMIN_PASSWORD = "abdessamad2014";
 const ACTIVATION_CODE = "FT2026"; 
 const DEVELOPER_INFO = "المبرمج العبقري ELGRANDFT (+212781886270)";
 
-// قاعدة بيانات بسيطة للمستخدمين المفعلين
 let activatedUsers = new Set();
 
-// --- 🧠 محرك الذكاء الاصطناعي (عقلاني وسريع) ---
+// --- 🧠 محرك الذكاء الاصطناعي العقلاني ---
 async function getAIResponse(text, imageData = null) {
     try {
         const payload = {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت نظام ذكاء اصطناعي عقلاني ومنطقي جداً. مطورك هو ${DEVELOPER_INFO}. 
-                أجب بدقة واحترافية. إذا سألك أحد عن المطور امدحه واذكر رقمه. أجب على المعادلات والتحليلات بدقة.`
+                content: `أنت نظام ذكاء اصطناعي عقلاني ومنطقي جداً. مطورك هو ${DEVELOPER_INFO}. أجب بدقة. إذا سألك أحد عن المطور امدحه واذكر رقمه +212781886270.`
             }, { 
                 role: "user", 
                 content: imageData ? [
@@ -36,20 +34,22 @@ async function getAIResponse(text, imageData = null) {
                     { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }
                 ] : text 
             }],
-            temperature: 0.5 // لزيادة العقلانية والدقة
+            temperature: 0.5
         };
         const res = await axios.post("https://api.groq.com/openai/v1/chat/completions", payload, { 
             headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } 
         });
         return res.data.choices[0].message.content;
-    } catch (e) { return "⚠️ السيرفر مشغول حالياً، حاول مرة أخرى."; }
+    } catch (e) { return "⚠️ السيرفر مشغول حالياً."; }
 }
 
 async function startAI() {
-    // 🗑️ تنظيف الجلسة القديمة إجبارياً لضمان الربط
-    if (fs.existsSync('./auth_info')) {
-        console.log('🗑️ جاري تنظيف الجلسة القديمة لضمان نجاح الربط...');
-        fs.rmSync('./auth_info', { recursive: true, force: true });
+    // 🗑️ تنظيف الجلسة القديمة تلقائياً إذا لم يكتمل الربط
+    if (!fs.existsSync('./auth_info/creds.json')) {
+        if (fs.existsSync('./auth_info')) {
+            fs.rmSync('./auth_info', { recursive: true, force: true });
+            console.log('🗑️ تم تنظيف بقايا الجلسة الفاشلة للبدء من جديد.');
+        }
     }
 
     const { state, saveCreds } = await useMultiFileAuthState('auth_info');
@@ -68,13 +68,11 @@ async function startAI() {
     // 🔑 طلب كود الربط
     if (!sock.authState.creds.registered) {
         console.log(`⏳ جاري طلب كود الربط للرقم: ${TARGET_NUMBER}...`);
-        await delay(8000); 
+        await delay(10000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
-            console.log(`\n\n🔗=======================================🔗`);
-            console.log(`✅ كود الربط الخاص بك هو: ${code}`);
-            console.log(`🔗=======================================🔗\n\n`);
-        } catch (err) { console.log("❌ فشل طلب الكود."); }
+            console.log(`\n✅ كود الربط الخاص بك يا زعيم هو: ${code}\n`);
+        } catch (err) { console.log("❌ فشل طلب الكود. تأكد من أن الرقم صحيح."); }
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -87,20 +85,20 @@ async function startAI() {
 
         // 🛡️ واجهة الآدمين
         if (text === ADMIN_PASSWORD) {
-            return await sock.sendMessage(from, { text: `🛡️ أهلاً زعيم ELGRANDFT.\nالنظام يعمل بأقصى سرعة.\nالمفعلون: ${activatedUsers.size}` });
+            return await sock.sendMessage(from, { text: `🛡️ واجهة تحكم ELGRANDFT:\nالحالة: متصل ✅\nالمفعلون: ${activatedUsers.size}\nرقم المطور: +212781886270` });
         }
 
-        // 🔑 نظام التفعيل
+        // 🔑 نظام التفعيل للمستخدمين الجدد
         if (!activatedUsers.has(from)) {
             if (text === ACTIVATION_CODE) {
                 activatedUsers.add(from);
-                return await sock.sendMessage(from, { text: "✅ تم تفعيلك بنجاح! كيف أخدمك اليوم؟" });
+                return await sock.sendMessage(from, { text: "✅ تم تفعيلك بنجاح في نظام ELGRANDFT!" });
             } else {
-                return await sock.sendMessage(from, { text: "⚠️ أهلاً بك! لاستخدام ذكاء ELGRANDFT، يرجى إرسال كود التفعيل: `FT2026`" });
+                return await sock.sendMessage(from, { text: "⚠️ أهلاً بك! لاستخدام البوت، أرسل كود التفعيل: `FT2026`" });
             }
         }
 
-        // معالجة الوسائط والذكاء الاصطناعي
+        // معالجة الصور والذكاء الاصطناعي
         let imageData = null;
         if (msg.message.imageMessage) {
             const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
@@ -117,7 +115,7 @@ async function startAI() {
 
     sock.ev.on('connection.update', (update) => {
         const { connection } = update;
-        if (connection === 'open') console.log("🚀 النظام متصل وشغال للجميع!");
+        if (connection === 'open') console.log("🚀 البوت شغال الآن!");
         if (connection === 'close') startAI();
     });
 }
