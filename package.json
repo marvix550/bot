@@ -1,3 +1,17 @@
-"scripts": {
-  "start": "node index.js"
+{
+  "name": "elgrandft-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp AI Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "@hapi/boom": "latest",
+    "axios": "latest",
+    "qrcode-terminal": "latest",
+    "pino": "latest",
+    "fs": "latest"
+  }
 }
