@@ -1,20 +1,25 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadContentFromMessage, makeCacheableSignalKeyStore } = require("@whiskeysockets/baileys");
+const { 
+    default: makeWASocket, 
+    useMultiFileAuthState, 
+    DisconnectReason, 
+    downloadContentFromMessage, 
+    makeCacheableSignalKeyStore 
+} = require("@whiskeysockets/baileys");
 const { Boom } = require("@hapi/boom");
 const axios = require("axios");
-const fs = require("fs");
-const http = require("http");
+const express = require('express');
 const pino = require("pino");
 const qrcode = require('qrcode-terminal');
 
-// --- 🌐 نظام الاستجابة الإلزامي لـ Railway (منع SIGTERM) ---
-const PORT = process.env.PORT || 3000;
+// --- 🌐 نظام الاستجابة السريع لـ Railway (منع الانغلاق) ---
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-http.createServer((req, res) => {
-    res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'});
-    res.write("ELGRANDFT AI SYSTEM: STATUS OK ✅\n");
-    res.write("DEVELOPER: ELGRANDFT (+212781886270)");
-    res.end();
-}).listen(PORT, "0.0.0.0", () => {
+app.get('/', (req, res) => {
+    res.status(200).send('ELGRANDFT AI SYSTEM: STATUS ONLINE ✅');
+});
+
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 السيرفر نشط على المنفذ ${PORT} - استقرار 100%`);
 });
 
@@ -29,18 +34,28 @@ async function getAIResponse(text, imageData = null) {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت ذكاء اصطناعي خارق. مطورك هو العبقري ${DEVELOPER_NAME}. رقم هاتفه ${CONTACT_INFO}. أجب بدقة ذكاء خارقة.` 
+                content: `أنت ذكاء اصطناعي خارق. مطورك هو العبقري ${DEVELOPER_NAME}. رقم هاتفه ${CONTACT_INFO}. أجب بدقة ذكاء خارقة وبسرعة.` 
             }],
             temperature: 0.2
         };
         if (imageData) {
-            payload.messages.push({ role: "user", content: [{ type: "text", text: text || "حلل الصورة" }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }] });
+            payload.messages.push({ 
+                role: "user", 
+                content: [
+                    { type: "text", text: text || "حلل الصورة بدقة" }, 
+                    { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }
+                ] 
+            });
         } else {
             payload.messages.push({ role: "user", content: text });
         }
-        const res = await axios.post("https://api.groq.com/openai/v1/chat/completions", payload, { headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } });
+        const res = await axios.post("https://api.groq.com/openai/v1/chat/completions", payload, { 
+            headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } 
+        });
         return res.data.choices[0].message.content;
-    } catch (e) { return "⚠️ السيرفر مشغول حالياً، جرب لاحقاً."; }
+    } catch (e) { 
+        return "⚠️ السيرفر مشغول حالياً، جرب لاحقاً يا زعيم."; 
+    }
 }
 
 async function startAI() {
@@ -63,16 +78,14 @@ async function startAI() {
         
         if (qr) {
             console.log("\n--------------------------------------------------");
-            console.log("📷 امسح كود QR الظاهر في الرابط التالي للربط:");
+            console.log("📷 رابط الـ QR المباشر (افتحه في المتصفح):");
             console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
             console.log("--------------------------------------------------\n");
-            
-            // محاولة إظهاره أيضاً في الـ Logs مباشرة
             qrcode.generate(qr, { small: true });
         }
         
         if (connection === 'open') {
-            console.log(`✅ تم الاتصال بنجاح! نظام ${DEVELOPER_NAME} في الخدمة.`);
+            console.log(`✅ تم الاتصال بنجاح! نظام ${DEVELOPER_NAME} في الخدمة الآن.`);
         }
         
         if (connection === 'close') {
@@ -95,7 +108,7 @@ async function startAI() {
                 const reply = await getAIResponse(msg.message.imageMessage.caption, buffer.toString('base64'));
                 return await sock.sendMessage(from, { text: reply }, { quoted: msg });
             } catch (err) {
-                console.log("خطأ في تحليل الصورة: " + err);
+                console.log("خطأ في معالجة الصورة: " + err);
             }
         }
 
