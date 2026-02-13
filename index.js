@@ -4,27 +4,24 @@ const axios = require("axios");
 const fs = require("fs");
 const http = require("http");
 const pino = require("pino");
-const qrcode = require('qrcode-terminal'); // المكتبة الجديدة للإظهار الإجباري
+const qrcode = require('qrcode-terminal');
 
-// --- 🌐 نظام الاستيقاظ المطور لضمان عدم الانطفاء ---
+// --- 🌐 نظام الاستجابة الإلزامي لـ Railway (حل مشكلة SIGTERM) ---
 const PORT = process.env.PORT || 3000;
-const REPL_URL = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/`;
 
 http.createServer((req, res) => {
-    res.write("ELGRANDFT QR SYSTEM: RUNNING ✅");
+    res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8'});
+    res.write("ELGRANDFT AI SYSTEM: STATUS OK ✅\n");
+    res.write("DEVELOPER: ELGRANDFT (+212781886270)");
     res.end();
-}).listen(PORT, "0.0.0.0");
-
-setInterval(() => {
-    axios.get(REPL_URL).catch(() => {});
-}, 240000);
+}).listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 السيرفر نشط على المنفذ ${PORT} - استقرار 100%`);
+});
 
 // --- ⚙️ إعدادات المطور ELGRANDFT ---
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
-const ADMIN_NUMBER = "212781886270@s.whatsapp.net"; 
 const DEVELOPER_NAME = "ELGRANDFT";
 const CONTACT_INFO = "+212781886270";
-const ADMIN_PASSWORD = "abdessamad2014"; 
 
 async function getAIResponse(text, imageData = null) {
     try {
@@ -32,28 +29,30 @@ async function getAIResponse(text, imageData = null) {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت نظام ذكاء اصطناعي خارق. مطورك هو المبرمج العبقري ${DEVELOPER_NAME}. إذا سُئلت عن المطور، قدم رقم هاتفه ${CONTACT_INFO} ومدحه باحترافية.` 
+                content: `أنت ذكاء اصطناعي خارق. مطورك هو العبقري ${DEVELOPER_NAME}. رقم هاتفه ${CONTACT_INFO}. أجب بدقة ذكاء خارقة.` 
             }],
             temperature: 0.2
         };
         if (imageData) {
-            payload.messages.push({ role: "user", content: [{ type: "text", text: text || "تحليل الصورة" }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }] });
+            payload.messages.push({ role: "user", content: [{ type: "text", text: text || "حلل الصورة" }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageData}` } }] });
         } else {
             payload.messages.push({ role: "user", content: text });
         }
         const res = await axios.post("https://api.groq.com/openai/v1/chat/completions", payload, { headers: { "Authorization": `Bearer ${GROQ_API_KEY}` } });
         return res.data.choices[0].message.content;
-    } catch (e) { return "⚠️ السيرفر مشغول."; }
+    } catch (e) { return "⚠️ السيرفر مشغول حالياً، جرب لاحقاً."; }
 }
 
 async function startAI() {
+    // استخدام مجلد ثابت للجلسة لضمان عدم تكرار QR
     const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    
     const sock = makeWASocket({
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
         },
-        printQRInTerminal: false, // سنطبعها يدوياً بالمكتبة الجديدة
+        printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
         browser: ["Ubuntu", "Chrome", "20.0.04"]
     });
@@ -62,15 +61,16 @@ async function startAI() {
 
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
-
+        
         if (qr) {
-            console.clear(); // تنظيف الشاشة لرؤية الكود بوضوح
-            console.log("📷 امسح كود QR الصغير التالي للربط يا زعيم:");
-            qrcode.generate(qr, { small: true }); // توليد QR صغير الحجم
+            console.log("📷 امسح كود QR للربط (نسخة Railway):");
+            qrcode.generate(qr, { small: true });
         }
-
-        if (connection === 'open') console.log(`🚀 نظام ${DEVELOPER_NAME} متصل الآن!`);
-
+        
+        if (connection === 'open') {
+            console.log(`✅ تم الاتصال بنجاح! نظام ${DEVELOPER_NAME} في الخدمة.`);
+        }
+        
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startAI();
@@ -97,4 +97,6 @@ async function startAI() {
         }
     });
 }
-startAI();
+
+// تشغيل النظام
+startAI().catch(err => console.log("خطأ في التشغيل: " + err));
