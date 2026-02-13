@@ -6,7 +6,7 @@ const http = require("http");
 const pino = require("pino");
 const qrcode = require('qrcode-terminal');
 
-// --- 🌐 نظام الاستجابة الإلزامي لـ Railway (حل مشكلة SIGTERM) ---
+// --- 🌐 نظام الاستجابة الإلزامي لـ Railway (منع SIGTERM) ---
 const PORT = process.env.PORT || 3000;
 
 http.createServer((req, res) => {
@@ -44,7 +44,6 @@ async function getAIResponse(text, imageData = null) {
 }
 
 async function startAI() {
-    // استخدام مجلد ثابت للجلسة لضمان عدم تكرار QR
     const { state, saveCreds } = await useMultiFileAuthState('auth_info');
     
     const sock = makeWASocket({
@@ -54,7 +53,7 @@ async function startAI() {
         },
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: ["Ubuntu", "Chrome", "20.0.04"]
+        browser: ["ELGRANDFT-AI", "Chrome", "1.0.0"]
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -63,7 +62,12 @@ async function startAI() {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
-            console.log("📷 امسح كود QR للربط (نسخة Railway):");
+            console.log("\n--------------------------------------------------");
+            console.log("📷 امسح كود QR الظاهر في الرابط التالي للربط:");
+            console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
+            console.log("--------------------------------------------------\n");
+            
+            // محاولة إظهاره أيضاً في الـ Logs مباشرة
             qrcode.generate(qr, { small: true });
         }
         
@@ -84,11 +88,15 @@ async function startAI() {
         const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || "").trim();
 
         if (msg.message.imageMessage) {
-            const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
-            let buffer = Buffer.from([]);
-            for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
-            const reply = await getAIResponse(msg.message.imageMessage.caption, buffer.toString('base64'));
-            return await sock.sendMessage(from, { text: reply }, { quoted: msg });
+            try {
+                const stream = await downloadContentFromMessage(msg.message.imageMessage, 'image');
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
+                const reply = await getAIResponse(msg.message.imageMessage.caption, buffer.toString('base64'));
+                return await sock.sendMessage(from, { text: reply }, { quoted: msg });
+            } catch (err) {
+                console.log("خطأ في تحليل الصورة: " + err);
+            }
         }
 
         if (text && !text.startsWith(".")) {
@@ -98,5 +106,4 @@ async function startAI() {
     });
 }
 
-// تشغيل النظام
-startAI().catch(err => console.log("خطأ في التشغيل: " + err));
+startAI().catch(err => console.log("خطأ حرج: " + err));
