@@ -3,16 +3,16 @@ const pino = require("pino");
 const fs = require("fs");
 const http = require("http");
 
-// سيرفر Uptime لضمان نشاط البوت ومنع توقف Railway
+// --- 🌐 سيرفر Uptime لضمان نشاط البوت على Railway ---
 http.createServer((req, res) => {
-    res.write("ELGRANDFT SYSTEM: STATUS OK ✅");
+    res.write("ELGRANDFT SYSTEM: READY AND STABLE ✅");
     res.end();
 }).listen(process.env.PORT || 3000);
 
-const TARGET_NUMBER = "212633678896";
+const TARGET_NUMBER = "212633678896"; 
 
 async function startBot() {
-    // تنظيف الجلسة القديمة لضمان عدم حدوث تعارض
+    // 🗑️ تنظيف شامل للجلسة لضمان طلب كود جديد تماماً
     if (fs.existsSync('./auth_info')) {
         fs.rmSync('./auth_info', { recursive: true, force: true });
     }
@@ -26,19 +26,24 @@ async function startBot() {
         },
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: ["Ubuntu", "Chrome", "110.0.5481.178"], // البصمة التي نجحت معك
-        connectTimeoutMs: 120000
+        // 🐧 هوية Ubuntu التي تضمن قبول الربط
+        browser: ["Ubuntu", "Chrome", "110.0.5481.178"],
+        connectTimeoutMs: 120000 
     });
 
-    // طلب كود الربط
+    // 🔑 نظام طلب الكود الذكي لتجنب الحظر (إصدار عبد الصمد)
     if (!sock.authState.creds.registered) {
-        console.log(`⏳ جاري طلب الكود للرقم: ${TARGET_NUMBER}...`);
-        await delay(10000); 
+        console.log(`⏳ ننتظر 30 ثانية لتهيئة السيرفر وتجنب حظر واتساب...`);
+        await delay(30000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
-            console.log(`\n✅ كود الربط الخاص بك هو: ${code}\n`);
+            console.log(`\n🔗=======================================🔗`);
+            console.log(`✅ كود الربط الذهبي الخاص بك هو: ${code}`);
+            console.log(`🔗=======================================🔗\n`);
         } catch (err) {
-            console.log("❌ فشل طلب الكود، يرجى المحاولة لاحقاً.");
+            console.log("⚠️ فشل الطلب مؤقتاً. سأعيد المحاولة تلقائياً بعد دقيقة واحدة...");
+            await delay(60000);
+            return startBot(); // إعادة المحاولة تلقائياً
         }
     }
 
@@ -46,19 +51,21 @@ async function startBot() {
 
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update;
-        if (connection === 'open') console.log("🚀 تم الاتصال بنجاح يا ELGRANDFT!");
+        if (connection === 'open') {
+            console.log("🚀 تم الاتصال بنجاح يا زعيم ELGRANDFT! البوت يعمل الآن.");
+        }
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startBot();
         }
     });
 
-    // نظام الرد على الجميع
+    // 🤖 استجابة بسيطة للتأكد من العمل
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
         if (!msg.message || msg.key.fromMe) return;
         const from = msg.key.remoteJid;
-        await sock.sendMessage(from, { text: "أهلاً! نظام ELGRANDFT يعمل بنجاح. المبرمج: +212781886270" });
+        await sock.sendMessage(from, { text: "أهلاً! نظام ELGRANDFT يعمل بنجاح. المبرمج العبقري: +212781886270" });
     });
 }
 
