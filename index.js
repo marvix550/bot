@@ -13,11 +13,11 @@ const axios = require("axios");
 // --- 🌐 سيرفر الويب لضمان استقرار Railway (منع SIGTERM) ---
 const app = express();
 const PORT = process.env.PORT || 8080;
-app.get('/', (req, res) => res.status(200).send('ELGRANDFT PAIRING SYSTEM: ONLINE ✅'));
+app.get('/', (req, res) => res.status(200).send('ELGRANDFT AI SYSTEM: ONLINE ✅'));
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 السيرفر نشط على المنفذ ${PORT} - استقرار 100%`));
 
-// --- ⚙️ إعدادات الذكاء الاصطناعي والمطور ---
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+// --- ⚙️ إعدادات المطور والذكاء الاصطناعي ---
+const GROQ_API_KEY = process.env.GROQ_API_KEY; 
 const DEVELOPER_NAME = "ELGRANDFT";
 const CONTACT_INFO = "+212781886270";
 
@@ -27,7 +27,7 @@ async function getAIResponse(text, imageData = null) {
             model: imageData ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile",
             messages: [{ 
                 role: "system", 
-                content: `أنت ذكاء اصطناعي خارق. مطورك هو العبقري ${DEVELOPER_NAME}. رقم هاتفه ${CONTACT_INFO}. أجب بدقة ذكاء خارقة.` 
+                content: `أنت ذكاء اصطناعي خارق. مطورك هو العبقري ${DEVELOPER_NAME}. رقم هاتفه ${CONTACT_INFO}. أجب بدقة خارقة.` 
             }],
             temperature: 0.2
         };
@@ -54,25 +54,32 @@ async function startAI() {
         browser: ["Ubuntu", "Chrome", "20.0.04"]
     });
 
-    // --- 🔑 طلب كود الربط (Pairing Code) ---
-    if (!sock.authState.creds.registered) {
-        const phoneNumber = "212633678896"; // الرقم الذي طلبته
-        setTimeout(async () => {
-            const code = await sock.requestPairingCode(phoneNumber);
-            console.log("\n================================================");
-            console.log(`🔥 كود الربط الخاص بك هو: ${code}`);
-            console.log("================================================\n");
-        }, 5000); // انتظار 5 ثوانٍ لضمان استقرار الاتصال
-    }
-
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
-        if (connection === 'open') console.log("✅ تم الاتصال بنجاح! البوت جاهز.");
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) startAI();
+        } else if (connection === 'open') {
+            console.log("✅ تم الاتصال بنجاح! البوت في الخدمة الآن.");
+        }
+
+        // --- 🔑 نظام طلب كود الربط الذكي لتجنب خطأ 428 ---
+        if (!sock.authState.creds.registered && !qr) {
+            console.log("⏳ جاري تحضير نظام الربط بالرقم...");
+            setTimeout(async () => {
+                try {
+                    // الرقم الذي حددته مسبقاً
+                    const code = await sock.requestPairingCode("212633678896");
+                    console.log("\n================================================");
+                    console.log(`🔥 كود الربط الخاص بك هو: ${code}`);
+                    console.log("================================================\n");
+                } catch (err) {
+                    console.log("❌ تعذر طلب الكود الآن، سيقوم النظام بإعادة المحاولة تلقائياً.");
+                }
+            }, 10000); // زيادة مهلة الانتظار لـ 10 ثوانٍ لضمان استقرار الاتصال بالخادم
         }
     });
 
@@ -97,4 +104,4 @@ async function startAI() {
     });
 }
 
-startAI().catch(err => console.log("خطأ حرج: " + err));
+startAI().catch(err => console.log("Critical Error: " + err));
