@@ -5,14 +5,14 @@ const http = require("http");
 
 // --- 🌐 سيرفر Uptime لضمان نشاط البوت على Railway ---
 http.createServer((req, res) => {
-    res.write("ELGRANDFT SYSTEM: READY AND STABLE ✅");
+    res.write("ELGRANDFT SYSTEM: BREAKING LIMITS 🚀");
     res.end();
 }).listen(process.env.PORT || 3000);
 
 const TARGET_NUMBER = "212633678896"; 
 
 async function startBot() {
-    // 🗑️ تنظيف شامل للجلسة لضمان طلب كود جديد تماماً
+    // 🗑️ تنظيف شامل للجلسة لضمان طلب كود جديد تماماً ببطاقة تعريف جديدة
     if (fs.existsSync('./auth_info')) {
         fs.rmSync('./auth_info', { recursive: true, force: true });
     }
@@ -26,24 +26,22 @@ async function startBot() {
         },
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        // 🐧 هوية Ubuntu التي تضمن قبول الربط
-        browser: ["Ubuntu", "Chrome", "110.0.5481.178"],
+        // 🍎 تغيير البصمة إلى MacOS لتمويه واتساب وكسر الحظر السابق
+        browser: ["Mac OS", "Chrome", "121.0.6167.184"], 
         connectTimeoutMs: 120000 
     });
 
-    // 🔑 نظام طلب الكود الذكي لتجنب الحظر (إصدار عبد الصمد)
+    // 🔑 نظام طلب الكود الذكي بانتظار طويل (إصدار كسر الحظر)
     if (!sock.authState.creds.registered) {
-        console.log(`⏳ ننتظر 30 ثانية لتهيئة السيرفر وتجنب حظر واتساب...`);
-        await delay(30000); 
+        console.log(`⏳ نظام كسر الحظر نشط: ننتظر دقيقة كاملة لتهدئة السيرفر...`);
+        await delay(60000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
             console.log(`\n🔗=======================================🔗`);
-            console.log(`✅ كود الربط الذهبي الخاص بك هو: ${code}`);
+            console.log(`✅ كود الربط الجديد هو: ${code}`);
             console.log(`🔗=======================================🔗\n`);
         } catch (err) {
-            console.log("⚠️ فشل الطلب مؤقتاً. سأعيد المحاولة تلقائياً بعد دقيقة واحدة...");
-            await delay(60000);
-            return startBot(); // إعادة المحاولة تلقائياً
+            console.log("⚠️ لا زال الحظر قائماً. اطفئ السيرفر لـ 15 دقيقة إجبارياً ثم أعد المحاولة.");
         }
     }
 
@@ -60,12 +58,12 @@ async function startBot() {
         }
     });
 
-    // 🤖 استجابة بسيطة للتأكد من العمل
+    // 🤖 نظام الرد التلقائي للتأكد من العمل
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
         if (!msg.message || msg.key.fromMe) return;
         const from = msg.key.remoteJid;
-        await sock.sendMessage(from, { text: "أهلاً! نظام ELGRANDFT يعمل بنجاح. المبرمج العبقري: +212781886270" });
+        await sock.sendMessage(from, { text: "أهلاً! نظام ELGRANDFT يعمل الآن بنظام MacOS المستقر. المبرمج: +212781886270" });
     });
 }
 
