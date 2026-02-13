@@ -3,13 +3,16 @@ const pino = require("pino");
 const fs = require("fs");
 const http = require("http");
 
-// سيرفر Uptime لضمان نشاط البوت
-http.createServer((req, res) => { res.end("SYSTEM ONLINE - DEVELOPER: ELGRANDFT"); }).listen(process.env.PORT || 3000);
+// سيرفر Uptime لضمان نشاط البوت ومنع توقف Railway
+http.createServer((req, res) => {
+    res.write("ELGRANDFT SYSTEM: STATUS OK ✅");
+    res.end();
+}).listen(process.env.PORT || 3000);
 
 const TARGET_NUMBER = "212633678896";
 
 async function startBot() {
-    // 🗑️ تنظيف آلي للجلسة عند كل تشغيل جديد
+    // تنظيف الجلسة القديمة لضمان عدم حدوث تعارض
     if (fs.existsSync('./auth_info')) {
         fs.rmSync('./auth_info', { recursive: true, force: true });
     }
@@ -23,9 +26,8 @@ async function startBot() {
         },
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        // 🐧 هوية Ubuntu الأسطورية
-        browser: ["Ubuntu", "Chrome", "110.0.5481.178"],
-        connectTimeoutMs: 120000 // وقت كافٍ جداً للربط
+        browser: ["Ubuntu", "Chrome", "110.0.5481.178"], // البصمة التي نجحت معك
+        connectTimeoutMs: 120000
     });
 
     // طلب كود الربط
@@ -34,8 +36,10 @@ async function startBot() {
         await delay(10000); 
         try {
             const code = await sock.requestPairingCode(TARGET_NUMBER);
-            console.log(`\n✅ الكود هو: ${code}\n`);
-        } catch (err) { console.log("❌ فشل الطلب، أعد المحاولة."); }
+            console.log(`\n✅ كود الربط الخاص بك هو: ${code}\n`);
+        } catch (err) {
+            console.log("❌ فشل طلب الكود، يرجى المحاولة لاحقاً.");
+        }
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -49,12 +53,12 @@ async function startBot() {
         }
     });
 
-    // الرد البسيط للتاكد من العمل
+    // نظام الرد على الجميع
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const msg = messages[0];
         if (!msg.message || msg.key.fromMe) return;
         const from = msg.key.remoteJid;
-        await sock.sendMessage(from, { text: "أهلاً! نظام ELGRANDFT يعمل بنجاح. أرسل FT2026 لتفعيل الذكاء الاصطناعي." });
+        await sock.sendMessage(from, { text: "أهلاً! نظام ELGRANDFT يعمل بنجاح. المبرمج: +212781886270" });
     });
 }
 
